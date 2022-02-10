@@ -1,20 +1,23 @@
 <template>
   <div id="wrapper">
     <h1>ToDoリスト</h1>
-    <div id="app" v-cloak>
-      <form @submit.prevent="addItem">
-        <input type="text" v-model="item" ref="editor" class="form-control">
-        <button @click="setItems" type="submit">{{changeButtonText}}</button>
-      </form>
-
+    <div id="memos_content" v-cloak>
       <ul>
         <li v-for="memo in memos" :key="memo.id">
-          <span id="memo_list">{{ memo.body }}</span>
-          <button @click="deleteItem(memo.id)">削除</button>
-          <button @click="editItem(memo.id)">編集</button>
+          <a id="memo_list" href="#" @click="editItem(memo.id)">{{ memo.body.split('\n')[0] }}</a>
+          <!-- <button @click="deleteItem(memo.id)">削除</button> -->
+          <!-- <button @click="editItem(memo.id)">編集</button> -->
         </li>
       </ul>
+        <form @submit.prevent="addItem" v-show="isActive">
+          <textarea v-model="item" ref="editor" class="form-control" id="" cols="30" rows="10"></textarea>
+          <button @click="setItems" type="submit">{{changeButtonText}}</button>
+          <div v-show="deleteActive">
+            <button @click="deleteItem" type="submit" v-show="isActive">削除</button>
+          </div>
+        </form>
     </div>
+    <div id="add_button" @click="changeShow">&plus;</div>
   </div>
 </template>
 
@@ -26,7 +29,9 @@ export default {
     return {
       item: '',
       editId: null,
-      memos: []
+      memos: [],
+      isActive: false,
+      deleteActive: false
     }
   },
   computed: {
@@ -34,14 +39,14 @@ export default {
       return this.editId === null ? '追加' : '完了'
     }
   },
-  watch: {
-    memos: {
-      handler () {
-        localStorage.setItem('memos', JSON.stringify(this.memos))
-      },
-      deep: true
-    }
-  },
+  // watch: {
+  //   memos: {
+  //     handler () {
+  //       localStorage.setItem('memos', JSON.stringify(this.memos))
+  //     },
+  //     deep: true
+  //   }
+  // },
   mounted () {
     this.$nextTick(() => {
       this.memos = JSON.parse(localStorage.getItem('memos')) || []
@@ -55,11 +60,9 @@ export default {
         body: this.item
       }
       this.memos.push(item)
+      this.saveItem()
       this.item = ''
-    },
-    deleteItem (targetId) {
-      const deleteId = this.memos.findIndex(({ id }) => id === targetId)
-      this.memos.splice(deleteId, 1)
+      this.isActive = false
     },
     setItems () {
       if (!this.item) return
@@ -69,11 +72,15 @@ export default {
           body: this.item
         }
         this.memos.push(item)
+        this.saveItem()
+        this.isActive = false
       } else {
         this.memos.splice(this.editId, 1, {
           id: this.memos[this.editId].id,
           body: this.item
         })
+        this.saveItem()
+        this.isActive = false
       }
       this.cancel()
     },
@@ -81,10 +88,36 @@ export default {
       this.item = ''
       this.editId = null
     },
+    deleteItem () {
+      if (!this.item) return
+      if (this.editId === null) {
+        const item = {
+          id: uuidv4(),
+          body: this.item
+        }
+        this.memos.push(item)
+        this.saveItem()
+        this.isActive = false
+      } else {
+        this.memos.splice(this.editId, 1)
+        this.saveItem()
+        this.isActive = false
+      }
+      this.cancel()
+    },
     editItem (targetId) {
       this.editId = this.memos.findIndex(({ id }) => id === targetId)
       this.item = this.memos[this.editId].body
       this.$refs.editor.focus()
+      this.isActive = true
+      this.deleteActive = true
+    },
+    changeShow () {
+      this.isActive = !this.isActive
+      this.deleteActive = false
+    },
+    saveItem () {
+      localStorage.setItem('memos', JSON.stringify(this.memos))
     }
   }
 }
@@ -109,6 +142,10 @@ export default {
     margin: 0 auto;
   }
 
+  #memos_content{
+    display: flex;
+  }
+
   h1, form, ul {
     width: 600px;
   }
@@ -116,6 +153,17 @@ export default {
   h1 {
     margin: 30px auto 40px;
     font-size: 30px;
+  }
+
+  #add_button{
+    font-size: 30px;
+    font-weight: bold;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    background: #ffb499;
+    border-radius: 50%;
+
   }
 
   form {
@@ -157,5 +205,9 @@ export default {
   button:hover {
     border: 2px solid #ffb499;
     color: #ffb499;
+  }
+
+  #flex{
+    display: flex;
   }
 </style>

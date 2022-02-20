@@ -1,22 +1,20 @@
 <template>
-  <div id="wrapper">
+  <div class="wrapper">
     <h1>ToDoリスト</h1>
-    <div id="memos_content" v-cloak>
+    <div id="memos-content" v-cloak>
       <div>
         <ul>
           <li v-for="memo in memos" :key="memo.id">
-            <a id="memo_list" href="#" @click="editTargetItem(memo.id)">{{ memo.body.split('\n')[0] }}</a>
+            <a id="memo-list" href="#" @click="targetMemo(memo.id)">{{ memo.body.split('\n')[0] }}</a>
           </li>
         </ul>
-        <div id="add_button" @click="inputContentShow">&plus;</div>
+        <div id="add-button" @click="inputContent = !inputContent">&plus;</div>
       </div>
-      <form @submit.prevent="addItem" v-show="isActive">
-        <textarea v-model="item"></textarea><br>
-        <div id="submit_button">
-          <button @click="editItem" type="submit">{{changeButtonText}}</button>
-          <span v-show="deleteActive">
-            <button @click="deleteItem" type="submit" v-show="isActive">削除</button>
-          </span>
+      <form @submit.prevent="addMemo" v-show="inputContent">
+        <textarea v-model="body"></textarea><br>
+        <div>
+          <button @click="editMemo" type="submit" >{{buttonText}}</button>
+          <button @click="deleteMemo" type="submit" v-show="closeContent">削除</button>
         </div>
       </form>
     </div>
@@ -29,78 +27,69 @@ export default {
   name: 'ToDoList',
   data () {
     return {
-      item: '',
+      body: '',
       editId: null,
       memos: [],
-      isActive: false,
-      deleteActive: false
+      inputContent: false
     }
   },
   computed: {
-    changeButtonText () {
+    buttonText () {
       return this.editId === null ? '追加' : '完了'
+    },
+    closeContent () {
+      return this.editId !== null
     }
   },
   mounted () {
-    this.$nextTick(() => {
-      this.memos = JSON.parse(localStorage.getItem('memos')) || []
-    })
+    this.memos = JSON.parse(localStorage.getItem('memos')) || []
   },
   methods: {
-    inputContentShow () {
-      this.isActive = !this.isActive
-      this.deleteActive = false
-    },
-    createItemModule () {
-      const item = {
+    createMemo () {
+      const memo = {
         id: uuidv4(),
-        body: this.item
+        body: this.body
       }
-      this.memos.push(item)
-      this.saveItem()
-      this.item = ''
-      this.isActive = false
+      this.memos.push(memo)
+      this.saveMemo()
+      this.body = ''
+      this.inputContent = false
     },
-    addItem () {
-      if (!this.item) return
-      this.createItemModule()
+    addMemo () {
+      if (!this.body) return
+      this.createMemo()
     },
-    editItem () {
-      if (!this.item) return
+    editMemo () {
       if (this.editId === null) {
-        this.createItemModule()
+        this.createMemo()
       } else {
         this.memos.splice(this.editId, 1, {
           id: this.memos[this.editId].id,
-          body: this.item
+          body: this.body
         })
-        this.saveItem()
-        this.isActive = false
       }
-      this.cancel()
+      this.reset()
     },
-    deleteItem () {
-      if (!this.item) return
+    deleteMemo () {
       if (this.editId === null) {
-        this.createItemModule()
+        this.createMemo()
       } else {
         this.memos.splice(this.editId, 1)
-        this.saveItem()
-        this.isActive = false
       }
-      this.cancel()
+      this.reset()
     },
-    cancel () {
-      this.item = ''
+    reset () {
+      this.saveMemo()
+      this.inputContent = false
+      this.body = ''
       this.editId = null
     },
-    editTargetItem (targetId) {
+    targetMemo (targetId) {
       this.editId = this.memos.findIndex(({ id }) => id === targetId)
-      this.item = this.memos[this.editId].body
-      this.isActive = true
-      this.deleteActive = true
+      this.body = this.memos[this.editId].body
+      this.inputContent = true
     },
-    saveItem () {
+    saveMemo () {
       localStorage.setItem('memos', JSON.stringify(this.memos))
     }
   }
@@ -121,12 +110,12 @@ export default {
     padding: 0;
   }
 
-  #wrapper {
+  .wrapper {
     width: 1000px;
     margin: 0 auto;
   }
 
-  #memos_content{
+  #memos-content{
     display: flex;
     align-items: top;
     justify-content: space-between;
@@ -141,7 +130,7 @@ export default {
     margin: 40px 0 30px;
   }
 
-  #add_button{
+  #add-button{
     font-size: 30px;
     font-weight: bold;
     color: #fff;
@@ -196,7 +185,7 @@ export default {
     list-style: none;
   }
 
-  li #memo_list {
+  li #memo-list {
     display: inline-block;
     width: 482px;
   }

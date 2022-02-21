@@ -5,16 +5,16 @@
       <div>
         <ul>
           <li v-for="memo in memos" :key="memo.id">
-            <a id="memo-list" href="#" @click="targetMemo(memo.id)">{{ memo.body.split('\n')[0] }}</a>
+            <a id="memo-list" href="#" @click="openMemo(memo.id)">{{ memo.body.split('\n')[0] }}</a>
           </li>
         </ul>
-        <div id="add-button" @click="inputContent = !inputContent">&plus;</div>
+        <div id="add-button" @click="openNewContent">&plus;</div>
       </div>
-      <form @submit.prevent="addMemo" v-show="inputContent">
+      <form @submit.prevent="addMemo" v-show="contentIsEnabled">
         <textarea v-model="body"></textarea><br>
         <div>
-          <button @click="editMemo" type="submit" >{{buttonText}}</button>
-          <button @click="deleteMemo" type="submit" v-show="closeContent">削除</button>
+          <button @click="editMemo" type="submit" >{{contentIsInvalid}}</button>
+          <button @click="deleteMemo" type="submit" v-show="contentIsInvalid">削除</button>
         </div>
       </form>
     </div>
@@ -30,21 +30,21 @@ export default {
       body: '',
       editId: null,
       memos: [],
-      inputContent: false
+      contentIsEnabled: false
     }
   },
   computed: {
-    buttonText () {
-      return this.editId === null ? '追加' : '完了'
-    },
-    closeContent () {
-      return this.editId !== null
+    contentIsInvalid () {
+      return this.editId !== null ? '完了' : '追加'
     }
   },
   mounted () {
     this.memos = JSON.parse(localStorage.getItem('memos')) || []
   },
   methods: {
+    openNewContent () {
+      this.contentIsEnabled = !this.contentIsEnabled
+    },
     createMemo () {
       const memo = {
         id: uuidv4(),
@@ -53,41 +53,33 @@ export default {
       this.memos.push(memo)
       this.saveMemo()
       this.body = ''
-      this.inputContent = false
+      this.contentIsEnabled = false
     },
     addMemo () {
       if (!this.body) return
       this.createMemo()
     },
     editMemo () {
-      if (this.editId === null) {
-        this.createMemo()
-      } else {
-        this.memos.splice(this.editId, 1, {
-          id: this.memos[this.editId].id,
-          body: this.body
-        })
-      }
+      this.memos.splice(this.editId, 1, {
+        id: this.memos[this.editId].id,
+        body: this.body
+      })
       this.reset()
     },
     deleteMemo () {
-      if (this.editId === null) {
-        this.createMemo()
-      } else {
-        this.memos.splice(this.editId, 1)
-      }
+      this.memos.splice(this.editId, 1)
       this.reset()
     },
     reset () {
       this.saveMemo()
-      this.inputContent = false
+      this.contentIsEnabled = false
       this.body = ''
       this.editId = null
     },
-    targetMemo (targetId) {
+    openMemo (targetId) {
       this.editId = this.memos.findIndex(({ id }) => id === targetId)
       this.body = this.memos[this.editId].body
-      this.inputContent = true
+      this.contentIsEnabled = true
     },
     saveMemo () {
       localStorage.setItem('memos', JSON.stringify(this.memos))

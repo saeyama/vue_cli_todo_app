@@ -14,7 +14,7 @@
         <textarea v-model="body"></textarea><br>
         <div>
           <button @click="editMemo" type="submit" >{{buttonText}}</button>
-          <button @click="deleteMemo" type="submit" v-show="!newMemo">削除</button>
+          <button @click="deleteMemo" type="submit" v-show="!memoIsEditing">削除</button>
         </div>
       </form>
     </div>
@@ -35,9 +35,9 @@ export default {
   },
   computed: {
     buttonText () {
-      return this.newMemo ? '追加' : '完了'
+      return this.memoIsEditing ? '追加' : '完了'
     },
-    newMemo () {
+    memoIsEditing () {
       return this.editId === null
     }
   },

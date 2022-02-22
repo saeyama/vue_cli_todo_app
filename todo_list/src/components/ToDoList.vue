@@ -13,8 +13,8 @@
       <form @submit.prevent="addMemo" v-show="contentIsEnabled">
         <textarea v-model="body"></textarea><br>
         <div>
-          <button @click="editMemo" type="submit" >{{contentIsInvalid}}</button>
-          <button @click="deleteMemo" type="submit" v-show="contentIsInvalid">削除</button>
+          <button @click="editMemo" type="submit" >{{buttonText}}</button>
+          <button @click="deleteMemo" type="submit" v-show="!addNewMemo">削除</button>
         </div>
       </form>
     </div>
@@ -34,8 +34,11 @@ export default {
     }
   },
   computed: {
-    contentIsInvalid () {
-      return this.editId !== null ? '完了' : '追加'
+    buttonText () {
+      return this.addNewMemo ? '追加' : '完了'
+    },
+    addNewMemo () {
+      return this.editId === null
     }
   },
   mounted () {
